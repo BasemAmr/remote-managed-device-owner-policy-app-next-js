@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useParams } from 'next/navigation';
 import {
     LayoutDashboard,
     Smartphone,
@@ -21,7 +21,7 @@ interface NavItem {
     icon: React.ElementType;
 }
 
-const navItems: NavItem[] = [
+const mainNavItems: NavItem[] = [
     { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
     { name: 'Devices', href: '/dashboard/devices', icon: Smartphone },
     { name: 'Approval Requests', href: '/dashboard/requests', icon: ClipboardCheck },
@@ -30,7 +30,11 @@ const navItems: NavItem[] = [
 
 export const Navigation: React.FC = () => {
     const pathname = usePathname();
+    const params = useParams();
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+    // Extract device ID from URL if present (try both [device_id] and [id])
+    const deviceId = params.device_id || params.id;
 
     const isActive = (href: string) => {
         if (href === '/dashboard') {
@@ -38,6 +42,15 @@ export const Navigation: React.FC = () => {
         }
         return pathname.startsWith(href);
     };
+
+    const deviceNavItems: NavItem[] = deviceId
+        ? [
+            { name: 'Device Details', href: `/dashboard/devices/${deviceId}`, icon: Smartphone },
+            { name: 'Device Apps', href: `/dashboard/apps/${deviceId}`, icon: AppWindow },
+            { name: 'Device URLs', href: `/dashboard/urls/${deviceId}`, icon: LinkIcon },
+            { name: 'Device Settings', href: `/dashboard/settings/${deviceId}`, icon: Settings },
+        ]
+        : [];
 
     return (
         <>
@@ -75,32 +88,73 @@ export const Navigation: React.FC = () => {
 
                 {/* Navigation items */}
                 <div className="flex-1 overflow-y-auto py-6">
-                    <ul className="space-y-2 px-3">
-                        {navItems.map((item) => {
-                            const Icon = item.icon;
-                            const active = isActive(item.href);
+                    {/* Main Section */}
+                    <div className="px-3 mb-6">
+                        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider px-4 mb-2">
+                            Main
+                        </p>
+                        <ul className="space-y-1">
+                            {mainNavItems.map((item) => {
+                                const Icon = item.icon;
+                                const active = isActive(item.href);
 
-                            return (
-                                <li key={item.href}>
-                                    <Link
-                                        href={item.href}
-                                        onClick={() => setIsMobileMenuOpen(false)}
-                                        className={`
-                      flex items-center gap-3 px-4 py-3 rounded-lg
-                      transition-all duration-200
-                      ${active
-                                                ? 'bg-blue-600 text-white shadow-lg'
-                                                : 'text-gray-300 hover:bg-gray-800 hover:text-white'
-                                            }
-                    `}
-                                    >
-                                        <Icon className="w-5 h-5" />
-                                        <span className="font-medium">{item.name}</span>
-                                    </Link>
-                                </li>
-                            );
-                        })}
-                    </ul>
+                                return (
+                                    <li key={item.href}>
+                                        <Link
+                                            href={item.href}
+                                            onClick={() => setIsMobileMenuOpen(false)}
+                                            className={`
+                        flex items-center gap-3 px-4 py-2.5 rounded-lg
+                        transition-all duration-200
+                        ${active
+                                                    ? 'bg-blue-600 text-white shadow-lg'
+                                                    : 'text-gray-300 hover:bg-gray-800 hover:text-white'
+                                                }
+                      `}
+                                        >
+                                            <Icon className="w-5 h-5" />
+                                            <span className="font-medium">{item.name}</span>
+                                        </Link>
+                                    </li>
+                                );
+                            })}
+                        </ul>
+                    </div>
+
+                    {/* Device Specific Section */}
+                    {deviceId && (
+                        <div className="px-3 mb-6">
+                            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider px-4 mb-2">
+                                Current Device
+                            </p>
+                            <ul className="space-y-1">
+                                {deviceNavItems.map((item) => {
+                                    const Icon = item.icon;
+                                    const active = isActive(item.href);
+
+                                    return (
+                                        <li key={item.href}>
+                                            <Link
+                                                href={item.href}
+                                                onClick={() => setIsMobileMenuOpen(false)}
+                                                className={`
+                          flex items-center gap-3 px-4 py-2.5 rounded-lg
+                          transition-all duration-200
+                          ${active
+                                                        ? 'bg-blue-600 text-white shadow-lg'
+                                                        : 'text-gray-300 hover:bg-gray-800 hover:text-white'
+                                                    }
+                        `}
+                                            >
+                                                <Icon className="w-5 h-5" />
+                                                <span className="font-medium">{item.name}</span>
+                                            </Link>
+                                        </li>
+                                    );
+                                })}
+                            </ul>
+                        </div>
+                    )}
                 </div>
 
                 {/* Footer */}
