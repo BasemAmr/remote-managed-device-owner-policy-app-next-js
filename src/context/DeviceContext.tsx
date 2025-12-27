@@ -10,7 +10,7 @@ interface DeviceContextType {
     error: string | null;
     fetchDevices: () => Promise<void>;
     refreshDevices: () => Promise<void>;
-    getDeviceById: (id: number) => Device | undefined;
+    getDeviceById: (id: string) => Device | undefined;
 }
 
 const DeviceContext = createContext<DeviceContextType | undefined>(undefined);
@@ -60,7 +60,7 @@ export const DeviceProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         }
     }, []);
 
-    const getDeviceById = useCallback((id: number): Device | undefined => {
+    const getDeviceById = useCallback((id: string): Device | undefined => {
         return devices.find(device => device.id === id);
     }, [devices]);
 

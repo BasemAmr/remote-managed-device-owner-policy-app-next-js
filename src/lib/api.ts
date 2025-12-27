@@ -94,7 +94,7 @@ export const deviceApi = {
         return response.data;
     },
 
-    getApps: async (deviceId: number): Promise<AppsResponse> => {
+    getApps: async (deviceId: string): Promise<AppsResponse> => {
         const response = await apiClient.get<AppsResponse>(`/api/management/devices/${deviceId}/apps`);
         return response.data;
     },
@@ -142,7 +142,7 @@ export const requestApi = {
 // ============================================
 
 export const violationApi = {
-    getViolations: async (deviceId?: number): Promise<ViolationsResponse> => {
+    getViolations: async (deviceId?: string): Promise<ViolationsResponse> => {
         const url = deviceId ? `/api/management/violations?device_id=${deviceId}` : '/api/management/violations';
         const response = await apiClient.get<ViolationsResponse>(url);
         return response.data;
@@ -154,7 +154,7 @@ export const violationApi = {
 // ============================================
 
 export const settingsApi = {
-    updateSettings: async (deviceId: number, settings: Partial<DeviceSettings>): Promise<{ message: string; settings: DeviceSettings }> => {
+    updateSettings: async (deviceId: string, settings: Partial<DeviceSettings>): Promise<{ message: string; settings: DeviceSettings }> => {
         const response = await apiClient.put(`/api/management/devices/${deviceId}/settings`, settings);
         return response.data;
     },

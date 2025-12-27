@@ -10,7 +10,7 @@ import Link from 'next/link';
 
 export default function DeviceSettingsPage() {
     const params = useParams();
-    const deviceId = parseInt(params.device_id as string);
+    const deviceId = params.device_id as string;
     const { getDeviceById } = useDevices();
 
     const [cooldownHours, setCooldownHours] = useState(24);

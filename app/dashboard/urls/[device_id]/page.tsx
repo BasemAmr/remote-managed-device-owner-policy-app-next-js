@@ -9,7 +9,7 @@ import Link from 'next/link';
 
 export default function UrlsManagementPage() {
     const params = useParams();
-    const deviceId = parseInt(params.device_id as string);
+    const deviceId = params.device_id as string;
     const { getDeviceById } = useDevices();
 
     const [isLoading, setIsLoading] = useState(false);

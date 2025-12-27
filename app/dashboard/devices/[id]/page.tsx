@@ -13,7 +13,7 @@ import type { App } from '@/lib/types';
 export default function DeviceDetailPage() {
     const params = useParams();
     const router = useRouter();
-    const deviceId = parseInt(params.id as string);
+    const deviceId = params.id as string;
     const { getDeviceById } = useDevices();
 
     const [apps, setApps] = useState<App[]>([]);

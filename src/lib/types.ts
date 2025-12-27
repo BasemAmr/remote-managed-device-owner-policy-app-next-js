@@ -22,7 +22,7 @@ export interface VerifyResponse {
 
 // Device Types
 export interface Device {
-    id: number;
+    id: string;
     device_name: string;
     android_id: string;
     last_seen: string;
@@ -33,7 +33,7 @@ export interface Device {
 
 export interface DeviceSettings {
     id: number;
-    device_id: number;
+    device_id: string;
     cooldown_hours: number;
     require_admin_approval: boolean;
     vpn_always_on: boolean;
@@ -44,7 +44,7 @@ export interface DeviceSettings {
 // App Types
 export interface App {
     id: number;
-    device_id: number;
+    device_id: string;
     package_name: string;
     app_name: string;
     is_blocked: boolean;
@@ -53,7 +53,7 @@ export interface App {
 }
 
 export interface AppPolicyRequest {
-    device_id: number;
+    device_id: string;
     package_name: string;
     app_name: string;
     is_blocked: boolean;
@@ -63,14 +63,14 @@ export interface AppPolicyRequest {
 // URL Blacklist Types
 export interface BlacklistedUrl {
     id: number;
-    device_id: number;
+    device_id: string;
     url_pattern: string;
     description: string | null;
     created_at: string;
 }
 
 export interface AddUrlRequest {
-    device_id: number;
+    device_id: string;
     url_pattern: string;
     description?: string;
 }
@@ -81,7 +81,7 @@ export type RequestType = 'disable_restriction' | 'uninstall_app' | 'change_sett
 
 export interface ApprovalRequest {
     id: number;
-    device_id: number;
+    device_id: string;
     device_name: string;
     request_type: RequestType;
     target_data: string; // JSON string
@@ -101,7 +101,7 @@ export type ViolationType = 'blocked_app_attempt' | 'blocked_url_attempt' | 'uni
 
 export interface Violation {
     id: number;
-    device_id: number;
+    device_id: string;
     device_name: string;
     violation_type: ViolationType;
     details: string; // JSON string
