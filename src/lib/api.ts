@@ -95,7 +95,7 @@ export const deviceApi = {
     },
 
     getApps: async (deviceId: number): Promise<AppsResponse> => {
-        const response = await apiClient.get<AppsResponse>(`/api/management/apps/${deviceId}`);
+        const response = await apiClient.get<AppsResponse>(`/api/management/devices/${deviceId}/apps`);
         return response.data;
     },
 };
@@ -106,22 +106,17 @@ export const deviceApi = {
 
 export const policyApi = {
     updateAppPolicy: async (policy: AppPolicyRequest): Promise<{ message: string; policy: any }> => {
-        const response = await apiClient.post('/api/management/app/policy', policy);
+        const response = await apiClient.post('/api/management/policies/apps', policy);
         return response.data;
     },
 
     addUrl: async (urlData: AddUrlRequest): Promise<{ message: string; url: any }> => {
-        const response = await apiClient.post('/api/management/url/add', urlData);
+        const response = await apiClient.post('/api/management/policies/urls', urlData);
         return response.data;
     },
 
     deleteUrl: async (id: number): Promise<{ message: string }> => {
-        const response = await apiClient.delete(`/api/management/url/${id}`);
-        return response.data;
-    },
-
-    getUrls: async (deviceId: number): Promise<UrlsResponse> => {
-        const response = await apiClient.get<UrlsResponse>(`/api/management/urls/${deviceId}`);
+        const response = await apiClient.delete(`/api/management/policies/urls/${id}`);
         return response.data;
     },
 };
@@ -137,7 +132,7 @@ export const requestApi = {
     },
 
     updateRequest: async (id: number, data: UpdateRequestRequest): Promise<{ message: string; request: any }> => {
-        const response = await apiClient.patch(`/api/management/request/${id}`, data);
+        const response = await apiClient.put(`/api/management/requests/${id}`, data);
         return response.data;
     },
 };
@@ -160,7 +155,7 @@ export const violationApi = {
 
 export const settingsApi = {
     updateSettings: async (deviceId: number, settings: Partial<DeviceSettings>): Promise<{ message: string; settings: DeviceSettings }> => {
-        const response = await apiClient.patch(`/api/management/settings/${deviceId}`, settings);
+        const response = await apiClient.put(`/api/management/devices/${deviceId}/settings`, settings);
         return response.data;
     },
 };

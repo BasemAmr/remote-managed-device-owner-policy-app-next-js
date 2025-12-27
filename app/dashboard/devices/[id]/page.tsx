@@ -8,7 +8,7 @@ import { formatRelativeTime, formatAbsoluteTime } from '@/lib/utils';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import { Smartphone, Shield, Clock, Package, Link as LinkIcon, Settings, ArrowLeft, AlertCircle } from 'lucide-react';
 import Link from 'next/link';
-import type { App, BlacklistedUrl } from '@/lib/types';
+import type { App } from '@/lib/types';
 
 export default function DeviceDetailPage() {
     const params = useParams();
@@ -17,7 +17,7 @@ export default function DeviceDetailPage() {
     const { getDeviceById } = useDevices();
 
     const [apps, setApps] = useState<App[]>([]);
-    const [urls, setUrls] = useState<BlacklistedUrl[]>([]);
+
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState('');
 
@@ -29,13 +29,9 @@ export default function DeviceDetailPage() {
             setError('');
 
             try {
-                const [appsResponse, urlsResponse] = await Promise.all([
-                    deviceApi.getApps(deviceId),
-                    policyApi.getUrls(deviceId),
-                ]);
+                const appsResponse = await deviceApi.getApps(deviceId);
 
                 setApps(appsResponse.apps);
-                setUrls(urlsResponse.urls);
             } catch (err) {
                 setError(getErrorMessage(err));
             } finally {
@@ -155,7 +151,7 @@ export default function DeviceDetailPage() {
             )}
 
             {/* Stats grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 border border-gray-200 dark:border-gray-700">
                     <div className="flex items-center gap-3 mb-2">
                         <Package className="w-6 h-6 text-blue-600 dark:text-blue-400" />
@@ -178,14 +174,6 @@ export default function DeviceDetailPage() {
                         <p className="text-sm text-gray-600 dark:text-gray-400">Locked Apps</p>
                     </div>
                     <p className="text-3xl font-bold text-gray-900 dark:text-white">{lockedApps}</p>
-                </div>
-
-                <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 border border-gray-200 dark:border-gray-700">
-                    <div className="flex items-center gap-3 mb-2">
-                        <LinkIcon className="w-6 h-6 text-purple-600 dark:text-purple-400" />
-                        <p className="text-sm text-gray-600 dark:text-gray-400">Blocked URLs</p>
-                    </div>
-                    <p className="text-3xl font-bold text-gray-900 dark:text-white">{urls.length}</p>
                 </div>
             </div>
 
