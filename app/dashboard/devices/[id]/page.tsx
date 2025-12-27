@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useDevices } from '@/context/DeviceContext';
-import { deviceApi, policyApi, getErrorMessage } from '@/lib/api';
+import { deviceApi, getErrorMessage } from '@/lib/api';
 import { formatRelativeTime, formatAbsoluteTime } from '@/lib/utils';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import { Smartphone, Shield, Clock, Package, Link as LinkIcon, Settings, ArrowLeft, AlertCircle } from 'lucide-react';

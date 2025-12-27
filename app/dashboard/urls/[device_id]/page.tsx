@@ -1,22 +1,18 @@
 'use client';
 
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useState } from 'react';
 import { useParams } from 'next/navigation';
 import { useDevices } from '@/context/DeviceContext';
 import { policyApi, getErrorMessage } from '@/lib/api';
-import LoadingSpinner from '@/components/LoadingSpinner';
-import { ArrowLeft, AlertCircle, Link as LinkIcon, Trash2, Plus } from 'lucide-react';
+import { ArrowLeft, AlertCircle, Plus } from 'lucide-react';
 import Link from 'next/link';
-import type { BlacklistedUrl } from '@/lib/types';
-import { formatAbsoluteTime } from '@/lib/utils';
 
 export default function UrlsManagementPage() {
     const params = useParams();
     const deviceId = parseInt(params.device_id as string);
     const { getDeviceById } = useDevices();
 
-    const [urls, setUrls] = useState<BlacklistedUrl[]>([]);
-    const [isLoading, setIsLoading] = useState(true);
+    const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState('');
     const [successMessage, setSuccessMessage] = useState('');
 
@@ -26,26 +22,6 @@ export default function UrlsManagementPage() {
     const [isSubmitting, setIsSubmitting] = useState(false);
 
     const device = getDeviceById(deviceId);
-
-    const fetchUrls = useCallback(async () => {
-        setIsLoading(true);
-        setError('');
-
-        try {
-            const response = await policyApi.getUrls(deviceId);
-            setUrls(response.urls);
-        } catch (err) {
-            setError(getErrorMessage(err));
-        } finally {
-            setIsLoading(false);
-        }
-    }, [deviceId]);
-
-    useEffect(() => {
-        if (deviceId) {
-            fetchUrls();
-        }
-    }, [deviceId, fetchUrls]);
 
     const handleAddUrl = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -63,33 +39,11 @@ export default function UrlsManagementPage() {
             setUrlPattern('');
             setDescription('');
 
-            // Refresh the list
-            await fetchUrls();
-
             setTimeout(() => setSuccessMessage(''), 3000);
         } catch (err) {
             setError(getErrorMessage(err));
         } finally {
             setIsSubmitting(false);
-        }
-    };
-
-    const handleDeleteUrl = async (id: number, pattern: string) => {
-        if (!confirm(`Are you sure you want to remove "${pattern}" from the blacklist?`)) {
-            return;
-        }
-
-        try {
-            await policyApi.deleteUrl(id);
-
-            // Optimistic update
-            setUrls(prevUrls => prevUrls.filter(url => url.id !== id));
-
-            setSuccessMessage('URL removed from blacklist successfully');
-            setTimeout(() => setSuccessMessage(''), 3000);
-        } catch (err) {
-            setError(getErrorMessage(err));
-            setTimeout(() => setError(''), 5000);
         }
     };
 
@@ -145,7 +99,9 @@ export default function UrlsManagementPage() {
             {error && (
                 <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4 flex items-start gap-3">
                     <AlertCircle className="w-5 h-5 text-red-600 dark:text-red-400 flex-shrink-0 mt-0.5" />
-                    <p className="text-red-800 dark:text-red-300">{error}</p>
+                    <div>
+                        <p className="text-red-800 dark:text-red-300">{error}</p>
+                    </div>
                 </div>
             )}
 
@@ -154,6 +110,11 @@ export default function UrlsManagementPage() {
                 <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">
                     Add URL to Blacklist
                 </h2>
+                <div className="bg-yellow-50 dark:bg-yellow-900/30 border border-yellow-200 dark:border-yellow-700 rounded-lg p-4 mb-6">
+                    <p className="text-yellow-800 dark:text-yellow-200 text-sm">
+                        Note: Listing and removing blocked URLs is currently not supported by the server. You can only add new rules.
+                    </p>
+                </div>
                 <form onSubmit={handleAddUrl} className="space-y-4">
                     <div>
                         <label htmlFor="url-pattern" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -201,68 +162,6 @@ export default function UrlsManagementPage() {
                     </button>
                 </form>
             </div>
-
-            {/* Loading state */}
-            {isLoading && (
-                <div className="flex justify-center py-12">
-                    <LoadingSpinner size="lg" text="Loading blacklisted URLs..." />
-                </div>
-            )}
-
-            {/* Empty state */}
-            {!isLoading && urls.length === 0 && (
-                <div className="text-center py-12">
-                    <LinkIcon className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-                    <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
-                        No URLs blacklisted
-                    </h3>
-                    <p className="text-gray-600 dark:text-gray-400">
-                        Add URL patterns above to block access on this device.
-                    </p>
-                </div>
-            )}
-
-            {/* URLs list */}
-            {!isLoading && urls.length > 0 && (
-                <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden border border-gray-200 dark:border-gray-700">
-                    <div className="px-6 py-4 bg-gray-50 dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700">
-                        <h2 className="text-lg font-bold text-gray-900 dark:text-white">
-                            Blacklisted URLs ({urls.length})
-                        </h2>
-                    </div>
-                    <div className="divide-y divide-gray-200 dark:divide-gray-700">
-                        {urls.map((url) => (
-                            <div key={url.id} className="p-6 hover:bg-gray-50 dark:hover:bg-gray-900 transition-colors">
-                                <div className="flex items-start justify-between">
-                                    <div className="flex-1">
-                                        <div className="flex items-center gap-2 mb-2">
-                                            <LinkIcon className="w-5 h-5 text-purple-600 dark:text-purple-400" />
-                                            <h3 className="text-lg font-semibold text-gray-900 dark:text-white font-mono">
-                                                {url.url_pattern}
-                                            </h3>
-                                        </div>
-                                        {url.description && (
-                                            <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
-                                                {url.description}
-                                            </p>
-                                        )}
-                                        <p className="text-xs text-gray-500 dark:text-gray-500">
-                                            Added {formatAbsoluteTime(url.created_at)}
-                                        </p>
-                                    </div>
-                                    <button
-                                        onClick={() => handleDeleteUrl(url.id, url.url_pattern)}
-                                        className="flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-medium rounded-lg transition-colors duration-200"
-                                    >
-                                        <Trash2 className="w-4 h-4" />
-                                        <span>Remove</span>
-                                    </button>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-            )}
         </div>
     );
 }
