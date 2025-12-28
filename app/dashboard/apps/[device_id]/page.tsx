@@ -212,6 +212,9 @@ export default function AppsManagementPage() {
                                         App Name
                                     </th>
                                     <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900 dark:text-white">
+                                        Version
+                                    </th>
+                                    <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900 dark:text-white">
                                         Block Status
                                     </th>
                                     <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900 dark:text-white">

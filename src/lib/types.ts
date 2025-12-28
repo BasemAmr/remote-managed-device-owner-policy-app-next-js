@@ -47,8 +47,11 @@ export interface App {
     device_id: string;
     package_name: string;
     app_name: string;
+    version_code: number;
+    version_name: string;
     is_blocked: boolean;
     is_uninstallable: boolean;
+    created_at: string;
     updated_at: string;
 }
 

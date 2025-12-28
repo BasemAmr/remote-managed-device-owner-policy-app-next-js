@@ -46,6 +46,13 @@ export const AppRow: React.FC<AppRowProps> = ({ app, onToggleBlock, onToggleLock
                 </div>
             </td>
 
+            {/* Version */}
+            <td className="px-6 py-4">
+                <div className="text-sm text-gray-500 dark:text-gray-400">
+                    {app.version_name} ({app.version_code})
+                </div>
+            </td>
+
             {/* Block status */}
             <td className="px-6 py-4">
                 <button
