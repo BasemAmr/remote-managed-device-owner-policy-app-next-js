@@ -12,7 +12,7 @@ import LoadingSpinner from '@/components/LoadingSpinner';
 export default function UrlsManagementPage() {
     const params = useParams();
     const deviceId = params.device_id as string;
-    const { getDeviceById } = useDevices();
+    const { getDeviceById, isLoading: isDevicesLoading } = useDevices();
 
     const [urls, setUrls] = useState<BlacklistedUrl[]>([]);
     const [isLoading, setIsLoading] = useState(true);
@@ -89,7 +89,15 @@ export default function UrlsManagementPage() {
         }
     };
 
-    if (!device && !isLoading) {
+    if (isLoading || (isDevicesLoading && !device)) {
+        return (
+            <div className="flex justify-center py-24">
+                <LoadingSpinner size="lg" text="Loading..." />
+            </div>
+        );
+    }
+
+    if (!device) {
         return (
             <div className="text-center py-12">
                 <AlertCircle className="w-16 h-16 text-red-500 mx-auto mb-4" />

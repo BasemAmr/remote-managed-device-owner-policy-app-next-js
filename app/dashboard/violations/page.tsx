@@ -9,7 +9,7 @@ import type { Violation } from '@/lib/types';
 import { formatRelativeTime, formatAbsoluteTime, formatViolationType, safeJsonParse } from '@/lib/utils';
 
 export default function ViolationsPage() {
-    const { devices, fetchDevices } = useDevices();
+    const { devices, isLoading: isDevicesLoading } = useDevices();
     const [violations, setViolations] = useState<Violation[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState('');
@@ -29,10 +29,6 @@ export default function ViolationsPage() {
             setIsLoading(false);
         }
     }, [deviceFilter]);
-
-    useEffect(() => {
-        fetchDevices();
-    }, [fetchDevices]);
 
     useEffect(() => {
         fetchViolations();

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { useParams } from 'next/navigation';
 import { useDevices } from '@/context/DeviceContext';
 import { settingsApi, getErrorMessage } from '@/lib/api';
@@ -11,19 +11,41 @@ import Link from 'next/link';
 export default function DeviceSettingsPage() {
     const params = useParams();
     const deviceId = params.device_id as string;
-    const { getDeviceById } = useDevices();
+    const { getDeviceById, isLoading: isDevicesLoading } = useDevices();
 
     const [cooldownHours, setCooldownHours] = useState(24);
     const [requireAdminApproval, setRequireAdminApproval] = useState(true);
     const [vpnAlwaysOn, setVpnAlwaysOn] = useState(false);
     const [preventFactoryReset, setPreventFactoryReset] = useState(true);
 
-    const [isLoading, setIsLoading] = useState(false);
+    const [isLoading, setIsLoading] = useState(true);
     const [isSaving, setIsSaving] = useState(false);
     const [error, setError] = useState('');
     const [successMessage, setSuccessMessage] = useState('');
 
     const device = getDeviceById(deviceId);
+
+    const fetchSettings = useCallback(async () => {
+        setIsLoading(true);
+        setError('');
+        try {
+            const settings = await settingsApi.getSettings(deviceId);
+            setCooldownHours(settings.cooldown_hours);
+            setRequireAdminApproval(settings.require_admin_approval);
+            setVpnAlwaysOn(settings.vpn_always_on);
+            setPreventFactoryReset(settings.prevent_factory_reset);
+        } catch (err) {
+            setError(getErrorMessage(err));
+        } finally {
+            setIsLoading(false);
+        }
+    }, [deviceId]);
+
+    useEffect(() => {
+        if (deviceId) {
+            fetchSettings();
+        }
+    }, [deviceId, fetchSettings]);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -48,7 +70,15 @@ export default function DeviceSettingsPage() {
         }
     };
 
-    if (!device && !isLoading) {
+    if (isLoading || (isDevicesLoading && !device)) {
+        return (
+            <div className="flex justify-center py-24">
+                <LoadingSpinner size="lg" text="Loading..." />
+            </div>
+        );
+    }
+
+    if (!device) {
         return (
             <div className="text-center py-12">
                 <AlertCircle className="w-16 h-16 text-red-500 mx-auto mb-4" />

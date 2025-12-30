@@ -1,7 +1,8 @@
 'use client';
 
-import React, { createContext, useContext, useState, useCallback } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { deviceApi, getErrorMessage } from '@/lib/api';
+import { useAuth } from './AuthContext';
 import type { Device } from '@/lib/types';
 
 interface DeviceContextType {
@@ -16,6 +17,7 @@ interface DeviceContextType {
 const DeviceContext = createContext<DeviceContextType | undefined>(undefined);
 
 export const DeviceProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+    const { isAuthenticated, isLoading: isAuthLoading } = useAuth();
     const [devices, setDevices] = useState<Device[]>([]);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -41,6 +43,13 @@ export const DeviceProvider: React.FC<{ children: React.ReactNode }> = ({ childr
             setIsLoading(false);
         }
     }, []);
+
+    // Fetch devices automatically when authenticated
+    useEffect(() => {
+        if (isAuthenticated && !isAuthLoading && devices.length === 0) {
+            fetchDevices();
+        }
+    }, [isAuthenticated, isAuthLoading, fetchDevices, devices.length]);
 
     const refreshDevices = useCallback(async () => {
         isLoadingRef.current = true;

@@ -159,6 +159,11 @@ export const violationApi = {
 // ============================================
 
 export const settingsApi = {
+    getSettings: async (deviceId: string): Promise<DeviceSettings> => {
+        const response = await apiClient.get<{ settings: DeviceSettings }>(`/api/management/devices/${deviceId}/settings`);
+        return response.data.settings;
+    },
+
     updateSettings: async (deviceId: string, settings: Partial<DeviceSettings>): Promise<{ message: string; settings: DeviceSettings }> => {
         const response = await apiClient.put(`/api/management/devices/${deviceId}/settings`, settings);
         return response.data;
