@@ -1,18 +1,21 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { useParams } from 'next/navigation';
 import { useDevices } from '@/context/DeviceContext';
 import { policyApi, getErrorMessage } from '@/lib/api';
-import { ArrowLeft, AlertCircle, Plus } from 'lucide-react';
+import { ArrowLeft, AlertCircle, Plus, Trash2, Globe } from 'lucide-react';
 import Link from 'next/link';
+import type { BlacklistedUrl } from '@/lib/types';
+import LoadingSpinner from '@/components/LoadingSpinner';
 
 export default function UrlsManagementPage() {
     const params = useParams();
     const deviceId = params.device_id as string;
     const { getDeviceById } = useDevices();
 
-    const [isLoading, setIsLoading] = useState(false);
+    const [urls, setUrls] = useState<BlacklistedUrl[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState('');
     const [successMessage, setSuccessMessage] = useState('');
 
@@ -20,8 +23,28 @@ export default function UrlsManagementPage() {
     const [urlPattern, setUrlPattern] = useState('');
     const [description, setDescription] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [deletingId, setDeletingId] = useState<number | null>(null);
 
     const device = getDeviceById(deviceId);
+
+    const fetchUrls = useCallback(async () => {
+        setIsLoading(true);
+        setError('');
+        try {
+            const response = await policyApi.getUrls(deviceId);
+            setUrls(response.urls);
+        } catch (err) {
+            setError(getErrorMessage(err));
+        } finally {
+            setIsLoading(false);
+        }
+    }, [deviceId]);
+
+    useEffect(() => {
+        if (deviceId) {
+            fetchUrls();
+        }
+    }, [deviceId, fetchUrls]);
 
     const handleAddUrl = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -38,12 +61,31 @@ export default function UrlsManagementPage() {
             setSuccessMessage('URL added to blacklist successfully');
             setUrlPattern('');
             setDescription('');
+            fetchUrls(); // Refresh list
 
             setTimeout(() => setSuccessMessage(''), 3000);
         } catch (err) {
             setError(getErrorMessage(err));
         } finally {
             setIsSubmitting(false);
+        }
+    };
+
+    const handleDeleteUrl = async (id: number) => {
+        if (!confirm('Are you sure you want to remove this URL from the blacklist?')) return;
+
+        setDeletingId(id);
+        setError('');
+
+        try {
+            await policyApi.deleteUrl(id);
+            setUrls(urls.filter(u => u.id !== id));
+            setSuccessMessage('URL removed from blacklist successfully');
+            setTimeout(() => setSuccessMessage(''), 3000);
+        } catch (err) {
+            setError(getErrorMessage(err));
+        } finally {
+            setDeletingId(null);
         }
     };
 
@@ -105,62 +147,121 @@ export default function UrlsManagementPage() {
                 </div>
             )}
 
-            {/* Add URL form */}
-            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 border border-gray-200 dark:border-gray-700">
-                <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">
-                    Add URL to Blacklist
-                </h2>
-                <div className="bg-yellow-50 dark:bg-yellow-900/30 border border-yellow-200 dark:border-yellow-700 rounded-lg p-4 mb-6">
-                    <p className="text-yellow-800 dark:text-yellow-200 text-sm">
-                        Note: Listing and removing blocked URLs is currently not supported by the server. You can only add new rules.
-                    </p>
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                {/* Add URL form */}
+                <div className="lg:col-span-1 bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 border border-gray-200 dark:border-gray-700 h-fit">
+                    <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">
+                        Add URL to Blacklist
+                    </h2>
+                    <form onSubmit={handleAddUrl} className="space-y-4">
+                        <div>
+                            <label htmlFor="url-pattern" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                URL Pattern *
+                            </label>
+                            <input
+                                id="url-pattern"
+                                type="text"
+                                value={urlPattern}
+                                onChange={(e) => setUrlPattern(e.target.value)}
+                                required
+                                placeholder="e.g., reddit.com, *.gambling.*"
+                                className="block w-full px-3 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            />
+                            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                                Use * as wildcard. Examples: reddit.com, *.gambling.*
+                            </p>
+                        </div>
+
+                        <div>
+                            <label htmlFor="description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                Description (optional)
+                            </label>
+                            <input
+                                id="description"
+                                type="text"
+                                value={description}
+                                onChange={(e) => setDescription(e.target.value)}
+                                placeholder="e.g., Social media distraction"
+                                className="block w-full px-3 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            />
+                        </div>
+
+                        <button
+                            type="submit"
+                            disabled={isSubmitting}
+                            className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-purple-600 hover:bg-purple-700 disabled:bg-gray-400 text-white font-semibold rounded-lg transition-colors duration-200"
+                        >
+                            {isSubmitting ? (
+                                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                            ) : (
+                                <Plus className="w-5 h-5" />
+                            )}
+                            <span>{isSubmitting ? 'Adding...' : 'Add URL'}</span>
+                        </button>
+                    </form>
                 </div>
-                <form onSubmit={handleAddUrl} className="space-y-4">
-                    <div>
-                        <label htmlFor="url-pattern" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                            URL Pattern *
-                        </label>
-                        <input
-                            id="url-pattern"
-                            type="text"
-                            value={urlPattern}
-                            onChange={(e) => setUrlPattern(e.target.value)}
-                            required
-                            placeholder="e.g., reddit.com, *.gambling.*, facebook.com/*"
-                            className="block w-full px-3 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                        />
-                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                            Use * as wildcard. Examples: reddit.com, *.gambling.*, facebook.com/*
-                        </p>
+
+                {/* URL list */}
+                <div className="lg:col-span-2 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
+                    <div className="p-6 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
+                        <h2 className="text-xl font-bold text-gray-900 dark:text-white">
+                            Current Blacklist
+                        </h2>
+                        <span className="bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 px-3 py-1 rounded-full text-sm font-medium">
+                            {urls.length} URLs
+                        </span>
                     </div>
 
-                    <div>
-                        <label htmlFor="description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                            Description (optional)
-                        </label>
-                        <input
-                            id="description"
-                            type="text"
-                            value={description}
-                            onChange={(e) => setDescription(e.target.value)}
-                            placeholder="e.g., Social media distraction"
-                            className="block w-full px-3 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                        />
-                    </div>
-
-                    <button
-                        type="submit"
-                        disabled={isSubmitting}
-                        className="flex items-center gap-2 px-4 py-3 bg-purple-600 hover:bg-purple-700 disabled:bg-gray-400 text-white font-semibold rounded-lg transition-colors duration-200"
-                    >
-                        {isSubmitting ? (
-                            <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                        ) : (
-                            <Plus className="w-5 h-5" />
-                        )}
-                        <span>{isSubmitting ? 'Adding...' : 'Add URL'}</span>
-                    </button>
-                </form>
+                    {isLoading ? (
+                        <div className="p-12 flex justify-center">
+                            <LoadingSpinner text="Fetching URLs..." />
+                        </div>
+                    ) : urls.length === 0 ? (
+                        <div className="p-12 text-center">
+                            <Globe className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+                            <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">No blocked URLs</h3>
+                            <p className="text-gray-600 dark:text-gray-400">Add URLs on the left to block them on this device.</p>
+                        </div>
+                    ) : (
+                        <div className="overflow-x-auto">
+                            <table className="w-full text-left border-collapse">
+                                <thead className="bg-gray-50 dark:bg-gray-900">
+                                    <tr>
+                                        <th className="px-6 py-4 text-sm font-semibold text-gray-900 dark:text-white">Pattern</th>
+                                        <th className="px-6 py-4 text-sm font-semibold text-gray-900 dark:text-white">Description</th>
+                                        <th className="px-6 py-4 text-sm font-semibold text-gray-900 dark:text-white w-20">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {urls.map((url) => (
+                                        <tr key={url.id} className="border-t border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800">
+                                            <td className="px-6 py-4 font-mono text-sm text-purple-600 dark:text-purple-400">
+                                                {url.url_pattern}
+                                            </td>
+                                            <td className="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">
+                                                {url.description || '-'}
+                                            </td>
+                                            <td className="px-6 py-4 text-right">
+                                                <button
+                                                    onClick={() => handleDeleteUrl(url.id)}
+                                                    disabled={deletingId === url.id}
+                                                    className="p-2 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
+                                                    title="Delete"
+                                                >
+                                                    {deletingId === url.id ? (
+                                                        <div className="w-5 h-5 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                                                    ) : (
+                                                        <Trash2 className="w-5 h-5" />
+                                                    )}
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    )}
+                </div>
             </div>
         </div>
     );

@@ -79,7 +79,7 @@ export const authApi = {
     },
 
     verify: async (): Promise<VerifyResponse> => {
-        const response = await apiClient.post<VerifyResponse>('/api/auth/verify');
+        const response = await apiClient.get<VerifyResponse>('/api/auth/verify');
         return response.data;
     },
 };
@@ -107,6 +107,11 @@ export const deviceApi = {
 export const policyApi = {
     updateAppPolicy: async (policy: AppPolicyRequest): Promise<{ message: string; policy: any }> => {
         const response = await apiClient.post('/api/management/policies/apps', policy);
+        return response.data;
+    },
+
+    getUrls: async (deviceId: string): Promise<UrlsResponse> => {
+        const response = await apiClient.get<UrlsResponse>(`/api/management/policies/urls?device_id=${deviceId}`);
         return response.data;
     },
 
