@@ -170,4 +170,28 @@ export const settingsApi = {
     },
 };
 
+// ============================================
+// ACCESSIBILITY SERVICES API
+// ============================================
+
+export const accessibilityApi = {
+    getAccessibilityServices: async (deviceId: string) => {
+        const response = await apiClient.get(`/api/management/devices/${deviceId}/accessibility-services`);
+        return response.data;
+    },
+
+    setAccessibilityServiceLock: async (deviceId: string, serviceId: string, isLocked: boolean) => {
+        const response = await apiClient.post(`/api/management/devices/${deviceId}/accessibility-services/lock`, {
+            service_id: serviceId,
+            is_locked: isLocked
+        });
+        return response.data;
+    },
+
+    getDevicePermissions: async (deviceId: string) => {
+        const response = await apiClient.get(`/api/management/devices/${deviceId}/permissions`);
+        return response.data;
+    },
+};
+
 export default apiClient;
