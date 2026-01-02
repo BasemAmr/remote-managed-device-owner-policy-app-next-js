@@ -134,6 +134,13 @@ export default function DeviceDetailPage() {
                                 <Settings className="w-5 h-5" />
                                 Settings
                             </Link>
+                            <Link
+                                href={`/dashboard/accessibility/${deviceId}`}
+                                className="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-lg transition-colors"
+                            >
+                                <Shield className="w-5 h-5" />
+                                Accessibility
+                            </Link>
                         </div>
                     </div>
                 </div>
