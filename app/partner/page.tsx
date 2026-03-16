@@ -20,7 +20,7 @@ export default function PartnerPage() {
         setIsSubmitting(true);
 
         try {
-            const res = await fetch('http://localhost:3000/api/auth/partner/login', {
+            const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/api/auth/partner/login`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ email, password })
@@ -46,7 +46,7 @@ export default function PartnerPage() {
         setIsSubmitting(true);
 
         try {
-            const res = await fetch('http://localhost:3000/api/auth/partner/unlock', {
+            const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/api/auth/partner/unlock`, {
                 method: 'POST',
                 headers: { 
                     'Content-Type': 'application/json',
