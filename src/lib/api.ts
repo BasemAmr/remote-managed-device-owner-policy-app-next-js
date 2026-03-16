@@ -16,7 +16,7 @@ import type {
 } from './types';
 
 // Create axios instance
-const apiClient: AxiosInstance = axios.create({
+export const apiClient: AxiosInstance = axios.create({
     baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001',
     headers: {
         'Content-Type': 'application/json',

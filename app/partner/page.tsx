@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { Shield, Mail, Lock, AlertCircle, Clock, CheckCircle } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { apiClient, getErrorMessage } from '@/lib/api';
 
 export default function PartnerPage() {
     const router = useRouter();
@@ -20,20 +21,14 @@ export default function PartnerPage() {
         setIsSubmitting(true);
 
         try {
-            const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/api/auth/partner/login`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email, password })
-            });
-            const data = await res.json();
-            
-            if (!res.ok) throw new Error(data.error || 'Login failed');
+            const res = await apiClient.post('/api/auth/partner/login', { email, password });
+            const data = res.data;
             
             setToken(data.token);
             setSuccessMessage('Logged in successfully');
             setTimeout(() => setSuccessMessage(''), 3000);
         } catch (err: any) {
-            setError(err.message);
+            setError(getErrorMessage(err));
         } finally {
             setIsSubmitting(false);
         }
@@ -46,21 +41,15 @@ export default function PartnerPage() {
         setIsSubmitting(true);
 
         try {
-            const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/api/auth/partner/unlock`, {
-                method: 'POST',
-                headers: { 
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}` 
-                },
-                body: JSON.stringify({ durationHours: parseInt(hours) })
-            });
-            const data = await res.json();
-            
-            if (!res.ok) throw new Error(data.error || 'Unlock failed');
+            const res = await apiClient.post('/api/auth/partner/unlock', 
+                { durationHours: parseInt(hours) },
+                { headers: { 'Authorization': `Bearer ${token}` } }
+            );
+            const data = res.data;
             
             setSuccessMessage(`Success! Admin dashboard mapped. Unlocked until: ${new Date(data.unlocked_until).toLocaleString()}`);
         } catch (err: any) {
-            setError(err.message);
+            setError(getErrorMessage(err));
         } finally {
             setIsSubmitting(false);
         }
