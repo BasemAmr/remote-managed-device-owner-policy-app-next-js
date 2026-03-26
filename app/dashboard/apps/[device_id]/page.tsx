@@ -111,6 +111,24 @@ export default function AppsManagementPage() {
         }
     };
 
+    const handleActivateRedShield = async (app: App) => {
+        if (!confirm(`Are you sure you want to permanently lock ${app.app_name}? This action cannot be undone.`)) return;
+
+        try {
+            await policyApi.activateAppRedShield({
+                device_id: deviceId,
+                package_name: app.package_name,
+            });
+
+            setSuccessMessage(`${app.app_name} is now permanently locked (Red Shield activated)`);
+            fetchApps(); // Refresh the list
+            setTimeout(() => setSuccessMessage(''), 3000);
+        } catch (err) {
+            setError(getErrorMessage(err));
+            setTimeout(() => setError(''), 5000);
+        }
+    };
+
     // Wait for either local apps to load OR global devices to load
     if (isLoading || (isDevicesLoading && !device)) {
         return (
@@ -232,6 +250,9 @@ export default function AppsManagementPage() {
                                     <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900 dark:text-white">
                                         Last Updated
                                     </th>
+                                    <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900 dark:text-white">
+                                        Actions
+                                    </th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -241,6 +262,7 @@ export default function AppsManagementPage() {
                                         app={app}
                                         onToggleBlock={handleToggleBlock}
                                         onToggleLock={handleToggleLock}
+                                        onActivateRedShield={handleActivateRedShield}
                                     />
                                 ))}
                             </tbody>

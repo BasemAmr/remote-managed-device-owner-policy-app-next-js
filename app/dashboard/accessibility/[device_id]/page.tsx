@@ -15,6 +15,7 @@ interface AccessibilityService {
     is_locked: boolean;
     locked_by?: string;
     locked_at?: string;
+    is_irrevocable?: boolean;
 }
 
 export default function AccessibilityServicesPage() {
@@ -24,6 +25,7 @@ export default function AccessibilityServicesPage() {
     const [services, setServices] = useState<AccessibilityService[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState('');
+    const [successMessage, setSuccessMessage] = useState('');
 
     const fetchServices = async () => {
         setIsLoading(true);
@@ -48,6 +50,23 @@ export default function AccessibilityServicesPage() {
             await fetchServices(); // Refresh
         } catch (err) {
             alert(getErrorMessage(err));
+        }
+    };
+
+    const handleActivateRedShield = async (serviceId: string) => {
+        if (!confirm('Are you sure you want to permanently lock this service? This action cannot be undone.')) return;
+        
+        setError('');
+        try {
+            await accessibilityApi.activateAccessibilityRedShield({
+                device_id: deviceId,
+                service_id: serviceId
+            });
+            setSuccessMessage('Service is now permanently locked (Red Shield activated)');
+            await fetchServices();
+            setTimeout(() => setSuccessMessage(''), 3000);
+        } catch (err) {
+            setError(getErrorMessage(err));
         }
     };
 
@@ -77,6 +96,21 @@ export default function AccessibilityServicesPage() {
                     Refresh
                 </button>
             </div>
+
+            {/* Success message */}
+            {successMessage && (
+                <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-4">
+                    <p className="text-green-800 dark:text-green-300">{successMessage}</p>
+                </div>
+            )}
+
+            {/* Error message */}
+            {error && (
+                <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4 flex items-start gap-3">
+                    <AlertCircle className="w-5 h-5 text-red-600 dark:text-red-400 flex-shrink-0 mt-0.5" />
+                    <p className="text-red-800 dark:text-red-300">{error}</p>
+                </div>
+            )}
 
             {/* Status Summary */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -169,25 +203,42 @@ export default function AccessibilityServicesPage() {
                                     </div>
                                 </td>
                                 <td className="px-6 py-4">
-                                    <button
-                                        onClick={() => handleToggleLock(service.service_id, service.is_locked)}
-                                        className={`flex items-center gap-2 px-3 py-1 rounded-lg text-sm font-medium ${service.is_locked
-                                                ? 'bg-red-600 hover:bg-red-700 text-white'
-                                                : 'bg-blue-600 hover:bg-blue-700 text-white'
-                                            }`}
-                                    >
-                                        {service.is_locked ? (
-                                            <>
-                                                <Unlock className="w-4 h-4" />
-                                                Unlock
-                                            </>
+                                    <div className="flex gap-2">
+                                        {service.is_irrevocable ? (
+                                            <span className="flex items-center gap-2 px-3 py-1 rounded-lg text-sm font-medium bg-red-100 text-red-800">
+                                                <Shield className="w-4 h-4" /> Permanently Locked
+                                            </span>
                                         ) : (
                                             <>
-                                                <Lock className="w-4 h-4" />
-                                                Lock
+                                                <button
+                                                    onClick={() => handleToggleLock(service.service_id, service.is_locked)}
+                                                    className={`flex items-center gap-2 px-3 py-1 rounded-lg text-sm font-medium ${service.is_locked
+                                                            ? 'bg-red-600 hover:bg-red-700 text-white'
+                                                            : 'bg-blue-600 hover:bg-blue-700 text-white'
+                                                        }`}
+                                                >
+                                                    {service.is_locked ? (
+                                                        <>
+                                                            <Unlock className="w-4 h-4" />
+                                                            Unlock
+                                                        </>
+                                                    ) : (
+                                                        <>
+                                                            <Lock className="w-4 h-4" />
+                                                            Lock
+                                                        </>
+                                                    )}
+                                                </button>
+                                                <button
+                                                    onClick={() => handleActivateRedShield(service.service_id)}
+                                                    className="flex items-center gap-2 px-3 py-1 rounded-lg text-sm font-medium bg-gray-100 dark:bg-gray-700 hover:bg-red-50 dark:hover:bg-red-900/20 text-gray-700 dark:text-gray-300 hover:text-red-600 dark:hover:text-red-400 transition-colors"
+                                                    title="Activate Red Shield (Permanent Lock)"
+                                                >
+                                                    <Shield className="w-4 h-4" />
+                                                </button>
                                             </>
                                         )}
-                                    </button>
+                                    </div>
                                 </td>
                             </tr>
                         ))}

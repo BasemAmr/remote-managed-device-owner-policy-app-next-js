@@ -4,7 +4,7 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { useParams } from 'next/navigation';
 import { useDevices } from '@/context/DeviceContext';
 import { policyApi, getErrorMessage } from '@/lib/api';
-import { ArrowLeft, AlertCircle, Plus, Trash2, Globe } from 'lucide-react';
+import { ArrowLeft, AlertCircle, Plus, Trash2, Globe, Shield } from 'lucide-react';
 import Link from 'next/link';
 import type { BlacklistedUrl } from '@/lib/types';
 import LoadingSpinner from '@/components/LoadingSpinner';
@@ -86,6 +86,21 @@ export default function UrlsManagementPage() {
             setError(getErrorMessage(err));
         } finally {
             setDeletingId(null);
+        }
+    };
+
+    const handleActivateRedShield = async (id: number) => {
+        if (!confirm('Are you sure you want to permanently lock this URL? This action cannot be undone.')) return;
+        
+        setError('');
+        try {
+            await policyApi.activateUrlRedShield(id);
+            setSuccessMessage('Red Shield activated. URL is now permanently locked.');
+            fetchUrls();
+
+            setTimeout(() => setSuccessMessage(''), 3000);
+        } catch (err) {
+            setError(getErrorMessage(err));
         }
     };
 
@@ -250,18 +265,33 @@ export default function UrlsManagementPage() {
                                                 {url.description || '-'}
                                             </td>
                                             <td className="px-6 py-4 text-right">
-                                                <button
-                                                    onClick={() => handleDeleteUrl(url.id)}
-                                                    disabled={deletingId === url.id}
-                                                    className="p-2 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
-                                                    title="Delete"
-                                                >
-                                                    {deletingId === url.id ? (
-                                                        <div className="w-5 h-5 border-2 border-current border-t-transparent rounded-full animate-spin" />
-                                                    ) : (
-                                                        <Trash2 className="w-5 h-5" />
-                                                    )}
-                                                </button>
+                                                {url.is_irrevocable ? (
+                                                    <div className="flex justify-end p-2" title="Permanently Locked">
+                                                        <Shield className="w-5 h-5 text-red-600" />
+                                                    </div>
+                                                ) : (
+                                                    <div className="flex justify-end gap-2">
+                                                        <button
+                                                            onClick={() => handleActivateRedShield(url.id)}
+                                                            className="p-2 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
+                                                            title="Activate Red Shield (Permanent Lock)"
+                                                        >
+                                                            <Shield className="w-5 h-5" />
+                                                        </button>
+                                                        <button
+                                                            onClick={() => handleDeleteUrl(url.id)}
+                                                            disabled={deletingId === url.id}
+                                                            className="p-2 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
+                                                            title="Delete"
+                                                        >
+                                                            {deletingId === url.id ? (
+                                                                <div className="w-5 h-5 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                                                            ) : (
+                                                                <Trash2 className="w-5 h-5" />
+                                                            )}
+                                                        </button>
+                                                    </div>
+                                                )}
                                             </td>
                                         </tr>
                                     ))}

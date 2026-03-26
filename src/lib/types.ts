@@ -51,6 +51,7 @@ export interface App {
     version_name: string;
     is_blocked: boolean;
     is_uninstallable: boolean;
+    is_irrevocable?: boolean;
     created_at: string;
     updated_at: string;
 }
@@ -69,6 +70,7 @@ export interface BlacklistedUrl {
     device_id: string;
     url_pattern: string;
     description: string | null;
+    is_irrevocable?: boolean;
     created_at: string;
 }
 

@@ -124,6 +124,16 @@ export const policyApi = {
         const response = await apiClient.delete(`/api/management/policies/urls/${id}`);
         return response.data;
     },
+
+    activateAppRedShield: async (data: { device_id: string; package_name: string }) => {
+        const response = await apiClient.patch('/api/management/policies/apps/red-shield', data);
+        return response.data;
+    },
+
+    activateUrlRedShield: async (id: number) => {
+        const response = await apiClient.patch(`/api/management/policies/urls/${id}/red-shield`);
+        return response.data;
+    },
 };
 
 // ============================================
@@ -190,6 +200,11 @@ export const accessibilityApi = {
 
     getDevicePermissions: async (deviceId: string) => {
         const response = await apiClient.get(`/api/management/devices/${deviceId}/permissions`);
+        return response.data;
+    },
+
+    activateAccessibilityRedShield: async (data: { device_id: string; service_id: string }) => {
+        const response = await apiClient.patch(`/api/management/devices/${data.device_id}/accessibility-services/red-shield`, data);
         return response.data;
     },
 };

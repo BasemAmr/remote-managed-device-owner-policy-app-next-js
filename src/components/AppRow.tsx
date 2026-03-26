@@ -1,16 +1,17 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Lock, LockOpen, Ban, Check } from 'lucide-react';
+import { Lock, LockOpen, Ban, Check, Shield } from 'lucide-react';
 import type { App } from '@/lib/types';
 
 interface AppRowProps {
     app: App;
     onToggleBlock: (app: App, isBlocked: boolean) => Promise<void>;
     onToggleLock: (app: App, isUninstallable: boolean) => Promise<void>;
+    onActivateRedShield: (app: App) => Promise<void>;
 }
 
-export const AppRow: React.FC<AppRowProps> = ({ app, onToggleBlock, onToggleLock }) => {
+export const AppRow: React.FC<AppRowProps> = ({ app, onToggleBlock, onToggleLock, onActivateRedShield }) => {
     const [isBlockLoading, setIsBlockLoading] = useState(false);
     const [isLockLoading, setIsLockLoading] = useState(false);
 
@@ -55,6 +56,16 @@ export const AppRow: React.FC<AppRowProps> = ({ app, onToggleBlock, onToggleLock
 
             {/* Block status */}
             <td className="px-6 py-4">
+                {app.is_irrevocable ? (
+                    <span className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium opacity-70 cursor-not-allowed ${
+                        app.is_blocked
+                            ? 'bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300'
+                            : 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300'
+                    }`}>
+                        {app.is_blocked ? <Ban className="w-4 h-4" /> : <Check className="w-4 h-4" />}
+                        <span>{app.is_blocked ? 'Blocked' : 'Allowed'}</span>
+                    </span>
+                ) : (
                 <button
                     onClick={handleToggleBlock}
                     disabled={isBlockLoading}
@@ -76,10 +87,21 @@ export const AppRow: React.FC<AppRowProps> = ({ app, onToggleBlock, onToggleLock
                     )}
                     <span>{app.is_blocked ? 'Blocked' : 'Allowed'}</span>
                 </button>
+                )}
             </td>
 
             {/* Lock status */}
             <td className="px-6 py-4">
+                {app.is_irrevocable ? (
+                    <span className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium opacity-70 cursor-not-allowed ${
+                        app.is_uninstallable
+                            ? 'bg-orange-100 text-orange-700 dark:bg-orange-900 dark:text-orange-300'
+                            : 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300'
+                    }`}>
+                        {app.is_uninstallable ? <Lock className="w-4 h-4" /> : <LockOpen className="w-4 h-4" />}
+                        <span>{app.is_uninstallable ? 'Locked' : 'Unlocked'}</span>
+                    </span>
+                ) : (
                 <button
                     onClick={handleToggleLock}
                     disabled={isLockLoading}
@@ -101,11 +123,29 @@ export const AppRow: React.FC<AppRowProps> = ({ app, onToggleBlock, onToggleLock
                     )}
                     <span>{app.is_uninstallable ? 'Locked' : 'Unlocked'}</span>
                 </button>
+                )}
             </td>
 
             {/* Last updated */}
             <td className="px-6 py-4 text-sm text-gray-500 dark:text-gray-400">
                 {new Date(app.updated_at).toLocaleDateString()}
+            </td>
+
+            {/* Actions (Red Shield) */}
+            <td className="px-6 py-4">
+                {app.is_irrevocable ? (
+                    <div className="flex items-center p-2" title="Permanently Locked">
+                        <Shield className="w-5 h-5 text-red-600" />
+                    </div>
+                ) : (
+                    <button
+                        onClick={() => onActivateRedShield(app)}
+                        className="p-2 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
+                        title="Activate Red Shield (Permanent Lock)"
+                    >
+                        <Shield className="w-5 h-5" />
+                    </button>
+                )}
             </td>
         </tr>
     );
