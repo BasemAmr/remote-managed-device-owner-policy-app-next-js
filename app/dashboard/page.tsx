@@ -6,11 +6,21 @@ import DeviceCard from '@/components/DeviceCard';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import { Smartphone, AlertCircle, RefreshCw } from 'lucide-react';
 
+// useSyncExternalStore compares each snapshot with the previous one (Object.is).
+// Returning Date.now() directly gave a new value on every read, so React re-rendered
+// forever ("Maximum update depth exceeded"). The snapshot is cached here and only
+// changes when the clock ticks.
+let clockNow = Date.now();
 const subscribeClock = (callback: () => void) => {
-    const timer = setInterval(callback, 30000);
+    // Refresh on subscribe so the first render after navigating here is not stale.
+    clockNow = Date.now();
+    const timer = setInterval(() => {
+        clockNow = Date.now();
+        callback();
+    }, 30000);
     return () => clearInterval(timer);
 };
-const getClockSnapshot = () => Date.now();
+const getClockSnapshot = () => clockNow;
 const getClockServerSnapshot = () => 0;
 
 export default function DashboardPage() {
