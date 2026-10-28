@@ -1,13 +1,21 @@
 'use client';
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useSyncExternalStore } from 'react';
 import { useDevices } from '@/context/DeviceContext';
 import DeviceCard from '@/components/DeviceCard';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import { Smartphone, AlertCircle, RefreshCw } from 'lucide-react';
 
+const subscribeClock = (callback: () => void) => {
+    const timer = setInterval(callback, 30000);
+    return () => clearInterval(timer);
+};
+const getClockSnapshot = () => Date.now();
+const getClockServerSnapshot = () => 0;
+
 export default function DashboardPage() {
     const { devices, isLoading, error, fetchDevices, refreshDevices } = useDevices();
+    const currentTime = useSyncExternalStore(subscribeClock, getClockSnapshot, getClockServerSnapshot);
 
     useEffect(() => {
         fetchDevices();
@@ -78,7 +86,7 @@ export default function DashboardPage() {
                         <div>
                             <p className="text-sm text-gray-600 dark:text-gray-400">Online</p>
                             <p className="text-3xl font-bold text-gray-900 dark:text-white">
-                                {devices.filter(d => new Date(d.last_seen).getTime() > Date.now() - 5 * 60 * 1000).length}
+                                {devices.filter(d => currentTime > 0 && new Date(d.last_seen).getTime() > currentTime - 5 * 60 * 1000).length}
                             </p>
                         </div>
                     </div>

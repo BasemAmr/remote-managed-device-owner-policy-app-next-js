@@ -139,3 +139,45 @@ export interface RequestsResponse {
 export interface ViolationsResponse {
     violations: Violation[];
 }
+
+// App Keyword Blocking Types
+export interface AppKeyword {
+    id: number;
+    device_id: string;
+    package_name: string;
+    keyword: string;
+    match_mode: 'contains' | 'exact';
+    description?: string;
+    is_irrevocable?: boolean;
+    created_at: string;
+    updated_at: string;
+}
+
+export interface AddAppKeywordRequest {
+    package_name: string;
+    keyword: string;
+    match_mode?: 'contains' | 'exact';
+    description?: string;
+}
+
+// Accessibility Fallback Types (Apps to Hide & URLs to Block)
+export type FallbackTargetType = 'app' | 'website';
+
+export interface AccessibilityFallback {
+    id: number;
+    device_id: string;
+    service_package_name: string;
+    target_type: FallbackTargetType;
+    target_value: string;
+    label?: string;
+    is_irrevocable?: boolean;
+    created_at: string;
+    updated_at: string;
+}
+
+export interface AddAccessibilityFallbackRequest {
+    service_package_name: string;
+    target_type: FallbackTargetType;
+    target_value: string;
+    label?: string;
+}

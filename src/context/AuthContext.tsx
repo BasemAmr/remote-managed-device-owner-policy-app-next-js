@@ -27,7 +27,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     // Verify authentication on mount
     const verifyAuth = useCallback(async (): Promise<boolean> => {
         const storedToken = auth.getToken();
-        const storedUser = auth.getUser();
 
         if (!storedToken) {
             setIsLoading(false);
@@ -92,8 +91,43 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     // Verify auth on mount
     useEffect(() => {
-        verifyAuth();
-    }, [verifyAuth]);
+        let isMounted = true;
+        const check = async () => {
+            const storedToken = auth.getToken();
+            if (!storedToken) {
+                if (isMounted) setIsLoading(false);
+                return;
+            }
+            try {
+                const response = await authApi.verify();
+                if (isMounted) {
+                    if (response.valid && response.admin) {
+                        setToken(storedToken);
+                        setUser(response.admin);
+                        auth.setUser(response.admin);
+                    } else {
+                        auth.clearAuth();
+                        setToken(null);
+                        setUser(null);
+                    }
+                    setIsLoading(false);
+                }
+            } catch (error) {
+                console.error('Auth verification failed:', getErrorMessage(error));
+                if (isMounted) {
+                    auth.clearAuth();
+                    setToken(null);
+                    setUser(null);
+                    setIsLoading(false);
+                }
+            }
+        };
+
+        check();
+        return () => {
+            isMounted = false;
+        };
+    }, []);
 
     const value: AuthContextType = {
         user,

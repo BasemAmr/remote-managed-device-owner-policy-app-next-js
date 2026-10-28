@@ -9,7 +9,11 @@ interface DeviceCardProps {
 }
 
 export const DeviceCard: React.FC<DeviceCardProps> = ({ device }) => {
-    const isOnline = new Date(device.last_seen).getTime() > Date.now() - 5 * 60 * 1000; // Online if seen in last 5 minutes
+    const [isOnline, setIsOnline] = React.useState(false);
+
+    React.useEffect(() => {
+        setIsOnline(new Date(device.last_seen).getTime() > Date.now() - 5 * 60 * 1000);
+    }, [device.last_seen]);
 
     return (
         <Link href={`/dashboard/devices/${device.id}`}>

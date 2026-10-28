@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useState, useCallback } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams } from 'next/navigation';
 import { useDevices } from '@/context/DeviceContext';
 import { deviceApi, policyApi, getErrorMessage } from '@/lib/api';
 import LoadingSpinner from '@/components/LoadingSpinner';
@@ -223,7 +223,7 @@ export default function AppsManagementPage() {
                         No apps found
                     </h3>
                     <p className="text-gray-600 dark:text-gray-400">
-                        This device hasn't reported any installed apps yet.
+                        This device hasn&apos;t reported any installed apps yet.
                     </p>
                 </div>
             )}

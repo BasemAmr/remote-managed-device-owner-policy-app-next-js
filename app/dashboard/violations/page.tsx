@@ -9,7 +9,7 @@ import type { Violation } from '@/lib/types';
 import { formatRelativeTime, formatAbsoluteTime, formatViolationType, safeJsonParse } from '@/lib/utils';
 
 export default function ViolationsPage() {
-    const { devices, isLoading: isDevicesLoading } = useDevices();
+    const { devices } = useDevices();
     const [violations, setViolations] = useState<Violation[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState('');
@@ -34,8 +34,11 @@ export default function ViolationsPage() {
         fetchViolations();
     }, [fetchViolations]);
 
-    const getViolationIcon = (type: string) => {
-        return <AlertTriangle className="w-5 h-5" />;
+    const getViolationIcon = (type?: string) => {
+        if (type === 'blocked_url_attempt') {
+            return <AlertTriangle className="w-5 h-5 text-orange-600 dark:text-orange-400" />;
+        }
+        return <AlertTriangle className="w-5 h-5 text-red-600 dark:text-red-400" />;
     };
 
     const getViolationColor = (type: string) => {

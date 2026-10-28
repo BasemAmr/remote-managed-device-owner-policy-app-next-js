@@ -1,18 +1,17 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams } from 'next/navigation';
 import { useDevices } from '@/context/DeviceContext';
 import { deviceApi, getErrorMessage } from '@/lib/api';
 import { formatRelativeTime, formatAbsoluteTime } from '@/lib/utils';
 import LoadingSpinner from '@/components/LoadingSpinner';
-import { Smartphone, Shield, Clock, Package, Link as LinkIcon, Settings, ArrowLeft, AlertCircle } from 'lucide-react';
+import { Smartphone, Shield, Package, Link as LinkIcon, Settings, ArrowLeft, AlertCircle } from 'lucide-react';
 import Link from 'next/link';
 import type { App } from '@/lib/types';
 
 export default function DeviceDetailPage() {
     const params = useParams();
-    const router = useRouter();
     const deviceId = params.id as string;
     const { getDeviceById } = useDevices();
 
@@ -52,7 +51,7 @@ export default function DeviceDetailPage() {
                     Device Not Found
                 </h2>
                 <p className="text-gray-600 dark:text-gray-400 mb-6">
-                    The device you're looking for doesn't exist.
+                    The device you&apos;re looking for doesn&apos;t exist.
                 </p>
                 <Link
                     href="/dashboard/devices"

@@ -7,7 +7,7 @@ export const formatRelativeTime = (date: string | Date): string => {
     try {
         const dateObj = typeof date === 'string' ? new Date(date) : date;
         return formatDistanceToNow(dateObj, { addSuffix: true });
-    } catch (error) {
+    } catch {
         return 'Unknown';
     }
 };
@@ -19,7 +19,7 @@ export const formatAbsoluteTime = (date: string | Date): string => {
     try {
         const dateObj = typeof date === 'string' ? new Date(date) : date;
         return format(dateObj, 'MMM dd, yyyy h:mm a');
-    } catch (error) {
+    } catch {
         return 'Unknown';
     }
 };
@@ -35,7 +35,7 @@ export const getTimeRemaining = (date: string | Date): string | null => {
             return null;
         }
         return formatDistanceToNow(dateObj, { addSuffix: false });
-    } catch (error) {
+    } catch {
         return null;
     }
 };
@@ -50,7 +50,7 @@ export const getCountdownSeconds = (date: string | Date): number => {
         const now = new Date();
         const diff = dateObj.getTime() - now.getTime();
         return diff > 0 ? Math.floor(diff / 1000) : 0;
-    } catch (error) {
+    } catch {
         return 0;
     }
 };
@@ -84,10 +84,10 @@ export const truncate = (text: string, maxLength: number): string => {
 /**
  * Parse JSON string safely
  */
-export const safeJsonParse = <T = any>(json: string, fallback: T): T => {
+export const safeJsonParse = <T = unknown>(json: string, fallback: T): T => {
     try {
         return JSON.parse(json);
-    } catch (error) {
+    } catch {
         return fallback;
     }
 };
@@ -116,7 +116,7 @@ export const getStatusBadgeClass = (status: string): string => {
 /**
  * Debounce function for search inputs
  */
-export const debounce = <T extends (...args: any[]) => any>(
+export const debounce = <T extends (...args: unknown[]) => unknown>(
     func: T,
     wait: number
 ): ((...args: Parameters<T>) => void) => {

@@ -13,6 +13,10 @@ import type {
     AddUrlRequest,
     UpdateRequestRequest,
     DeviceSettings,
+    AppKeyword,
+    AddAppKeywordRequest,
+    AccessibilityFallback,
+    AddAccessibilityFallbackRequest,
 } from './types';
 
 // Create axios instance
@@ -105,7 +109,7 @@ export const deviceApi = {
 // ============================================
 
 export const policyApi = {
-    updateAppPolicy: async (policy: AppPolicyRequest): Promise<{ message: string; policy: any }> => {
+    updateAppPolicy: async (policy: AppPolicyRequest): Promise<{ message: string; policy: unknown }> => {
         const response = await apiClient.post('/api/management/policies/apps', policy);
         return response.data;
     },
@@ -115,7 +119,7 @@ export const policyApi = {
         return response.data;
     },
 
-    addUrl: async (urlData: AddUrlRequest): Promise<{ message: string; url: any }> => {
+    addUrl: async (urlData: AddUrlRequest): Promise<{ message: string; url: unknown }> => {
         const response = await apiClient.post('/api/management/policies/urls', urlData);
         return response.data;
     },
@@ -146,7 +150,7 @@ export const requestApi = {
         return response.data;
     },
 
-    updateRequest: async (id: number, data: UpdateRequestRequest): Promise<{ message: string; request: any }> => {
+    updateRequest: async (id: number, data: UpdateRequestRequest): Promise<{ message: string; request: unknown }> => {
         const response = await apiClient.put(`/api/management/requests/${id}`, data);
         return response.data;
     },
@@ -205,6 +209,76 @@ export const accessibilityApi = {
 
     activateAccessibilityRedShield: async (data: { device_id: string; service_id: string }) => {
         const response = await apiClient.patch(`/api/management/devices/${data.device_id}/accessibility-services/red-shield`, data);
+        return response.data;
+    },
+};
+
+// ============================================
+// APP KEYWORD BLOCKING API
+// ============================================
+
+export const appKeywordApi = {
+    getKeywords: async (deviceId: string): Promise<AppKeyword[]> => {
+        const response = await apiClient.get<{ success: boolean; data: AppKeyword[] }>(
+            `/api/management/devices/${deviceId}/keywords`
+        );
+        return response.data.data;
+    },
+
+    addKeyword: async (deviceId: string, data: AddAppKeywordRequest): Promise<{ success: boolean; data: AppKeyword }> => {
+        const response = await apiClient.post(
+            `/api/management/devices/${deviceId}/keywords`,
+            data
+        );
+        return response.data;
+    },
+
+    removeKeyword: async (deviceId: string, id: number): Promise<{ success: boolean; message: string }> => {
+        const response = await apiClient.delete(
+            `/api/management/devices/${deviceId}/keywords/${id}`
+        );
+        return response.data;
+    },
+
+    activateRedShield: async (deviceId: string, id: number): Promise<{ success: boolean; data: AppKeyword }> => {
+        const response = await apiClient.patch(
+            `/api/management/devices/${deviceId}/keywords/${id}/red-shield`
+        );
+        return response.data;
+    },
+};
+
+// ============================================
+// ACCESSIBILITY FALLBACK API (APPS TO HIDE)
+// ============================================
+
+export const accessibilityFallbackApi = {
+    getFallbacks: async (deviceId: string): Promise<AccessibilityFallback[]> => {
+        const response = await apiClient.get<{ success: boolean; data: AccessibilityFallback[] }>(
+            `/api/management/devices/${deviceId}/fallbacks`
+        );
+        return response.data.data;
+    },
+
+    addFallback: async (deviceId: string, data: AddAccessibilityFallbackRequest): Promise<{ success: boolean; data: AccessibilityFallback }> => {
+        const response = await apiClient.post(
+            `/api/management/devices/${deviceId}/fallbacks`,
+            data
+        );
+        return response.data;
+    },
+
+    removeFallback: async (deviceId: string, id: number): Promise<{ success: boolean; message: string }> => {
+        const response = await apiClient.delete(
+            `/api/management/devices/${deviceId}/fallbacks/${id}`
+        );
+        return response.data;
+    },
+
+    activateRedShield: async (deviceId: string, id: number): Promise<{ success: boolean; data: AccessibilityFallback }> => {
+        const response = await apiClient.patch(
+            `/api/management/devices/${deviceId}/fallbacks/${id}/red-shield`
+        );
         return response.data;
     },
 };

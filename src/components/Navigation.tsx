@@ -13,6 +13,9 @@ import {
     Settings,
     Menu,
     X,
+    Lock,
+    EyeOff,
+    Search,
 } from 'lucide-react';
 
 interface NavItem {
@@ -48,6 +51,9 @@ export const Navigation: React.FC = () => {
             { name: 'Device Details', href: `/dashboard/devices/${deviceId}`, icon: Smartphone },
             { name: 'Device Apps', href: `/dashboard/apps/${deviceId}`, icon: AppWindow },
             { name: 'Device URLs', href: `/dashboard/urls/${deviceId}`, icon: LinkIcon },
+            { name: 'Accessibility Locks', href: `/dashboard/accessibility/${deviceId}`, icon: Lock },
+            { name: 'Apps to Hide', href: `/dashboard/fallback/${deviceId}`, icon: EyeOff },
+            { name: 'Keyword Blocking', href: `/dashboard/keywords/${deviceId}`, icon: Search },
             { name: 'Device Settings', href: `/dashboard/settings/${deviceId}`, icon: Settings },
         ]
         : [];

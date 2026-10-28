@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { useParams } from 'next/navigation';
 import { accessibilityApi, getErrorMessage } from '@/lib/api';
 import { Shield, Lock, Unlock, CheckCircle, AlertCircle, RefreshCw } from 'lucide-react';
@@ -27,7 +27,7 @@ export default function AccessibilityServicesPage() {
     const [error, setError] = useState('');
     const [successMessage, setSuccessMessage] = useState('');
 
-    const fetchServices = async () => {
+    const fetchServices = useCallback(async () => {
         setIsLoading(true);
         setError('');
         try {
@@ -38,11 +38,11 @@ export default function AccessibilityServicesPage() {
         } finally {
             setIsLoading(false);
         }
-    };
+    }, [deviceId]);
 
     useEffect(() => {
         fetchServices();
-    }, [deviceId]);
+    }, [fetchServices]);
 
     const handleToggleLock = async (serviceId: string, currentLockState: boolean) => {
         try {

@@ -2,11 +2,9 @@
 
 import React, { useState } from 'react';
 import { Shield, Mail, Lock, AlertCircle, Clock, CheckCircle } from 'lucide-react';
-import { useRouter } from 'next/navigation';
 import { apiClient, getErrorMessage } from '@/lib/api';
 
 export default function PartnerPage() {
-    const router = useRouter();
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
@@ -27,7 +25,7 @@ export default function PartnerPage() {
             setToken(data.token);
             setSuccessMessage('Logged in successfully');
             setTimeout(() => setSuccessMessage(''), 3000);
-        } catch (err: any) {
+        } catch (err: unknown) {
             setError(getErrorMessage(err));
         } finally {
             setIsSubmitting(false);
@@ -48,7 +46,7 @@ export default function PartnerPage() {
             const data = res.data;
             
             setSuccessMessage(`Success! Admin dashboard mapped. Unlocked until: ${new Date(data.unlocked_until).toLocaleString()}`);
-        } catch (err: any) {
+        } catch (err: unknown) {
             setError(getErrorMessage(err));
         } finally {
             setIsSubmitting(false);
