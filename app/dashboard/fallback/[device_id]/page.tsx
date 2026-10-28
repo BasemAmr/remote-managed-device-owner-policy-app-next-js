@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import { useParams } from 'next/navigation';
 import { useDevices } from '@/context/DeviceContext';
 import { deviceApi, accessibilityApi, accessibilityFallbackApi, getErrorMessage } from '@/lib/api';
@@ -8,6 +8,10 @@ import { ArrowLeft, AlertCircle, Plus, Trash2, Shield, EyeOff, Globe, AppWindow,
 import Link from 'next/link';
 import type { App, AccessibilityFallback, FallbackTargetType } from '@/lib/types';
 import LoadingSpinner from '@/components/LoadingSpinner';
+import Combobox, { type ComboboxOption } from '@/components/Combobox';
+
+// Offered even when the device has not reported it, since it is the usual locked service.
+const APPBLOCK_PACKAGE = 'cz.mobilesoft.appblock';
 
 interface AccessibilityServiceOption {
     service_id: string;
@@ -29,10 +33,8 @@ export default function AccessibilityFallbacksPage() {
 
     // Form state
     const [servicePackageName, setServicePackageName] = useState('');
-    const [customServicePackage, setCustomServicePackage] = useState('');
     const [targetType, setTargetType] = useState<FallbackTargetType>('app');
     const [targetAppPackage, setTargetAppPackage] = useState('');
-    const [customAppPackage, setCustomAppPackage] = useState('');
     const [targetWebsiteUrl, setTargetWebsiteUrl] = useState('');
     const [label, setLabel] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -70,7 +72,7 @@ export default function AccessibilityFallbacksPage() {
         setIsSubmitting(true);
         setError('');
 
-        const finalService = servicePackageName === '__custom__' ? customServicePackage.trim() : servicePackageName;
+        const finalService = servicePackageName.trim();
 
         if (!finalService) {
             setError('Please select or specify a locked accessibility service package');
@@ -80,7 +82,7 @@ export default function AccessibilityFallbacksPage() {
 
         let finalTargetValue = '';
         if (targetType === 'app') {
-            finalTargetValue = targetAppPackage === '__custom__' ? customAppPackage.trim() : targetAppPackage;
+            finalTargetValue = targetAppPackage.trim();
             if (!finalTargetValue) {
                 setError('Please select or enter the application package to hide');
                 setIsSubmitting(false);
@@ -105,7 +107,6 @@ export default function AccessibilityFallbacksPage() {
 
             setSuccessMessage(`Fallback ${targetType === 'app' ? 'app to hide' : 'website to block'} added successfully!`);
             setTargetAppPackage('');
-            setCustomAppPackage('');
             setTargetWebsiteUrl('');
             setLabel('');
             fetchData();
@@ -149,6 +150,31 @@ export default function AccessibilityFallbacksPage() {
             setError(getErrorMessage(err));
         }
     };
+
+    // One package can expose several accessibility services; the rule is keyed by package, so list it once.
+    const serviceOptions = useMemo<ComboboxOption[]>(() => {
+        const byPackage = new Map<string, ComboboxOption>();
+        for (const svc of services) {
+            if (!byPackage.has(svc.package_name)) {
+                byPackage.set(svc.package_name, { value: svc.package_name, label: svc.label, hint: svc.package_name });
+            }
+        }
+        if (!byPackage.has(APPBLOCK_PACKAGE)) {
+            byPackage.set(APPBLOCK_PACKAGE, { value: APPBLOCK_PACKAGE, label: 'AppBlock', hint: APPBLOCK_PACKAGE });
+        }
+        return [...byPackage.values()].sort((a, b) => a.label.localeCompare(b.label));
+    }, [services]);
+
+    // Sorted by name so the list can be scanned; search handles the rest.
+    const appOptions = useMemo<ComboboxOption[]>(() => {
+        const byPackage = new Map<string, ComboboxOption>();
+        for (const app of installedApps) {
+            if (!byPackage.has(app.package_name)) {
+                byPackage.set(app.package_name, { value: app.package_name, label: app.app_name, hint: app.package_name });
+            }
+        }
+        return [...byPackage.values()].sort((a, b) => a.label.localeCompare(b.label));
+    }, [installedApps]);
 
     const getAppDisplayName = (pkg: string) => {
         const found = installedApps.find(a => a.package_name === pkg);
@@ -225,38 +251,14 @@ export default function AccessibilityFallbacksPage() {
                             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                                 When This Accessibility Service is Disabled: *
                             </label>
-                            <select
+                            <Combobox
+                                options={serviceOptions}
                                 value={servicePackageName}
-                                onChange={(e) => setServicePackageName(e.target.value)}
-                                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-rose-500 dark:bg-gray-700 dark:text-white text-sm"
-                                required
-                            >
-                                <option value="">-- Select Accessibility Service --</option>
-                                {services.map((svc) => (
-                                    <option key={svc.service_id} value={svc.package_name}>
-                                        {svc.label} ({svc.package_name})
-                                    </option>
-                                ))}
-                                <option value="cz.mobilesoft.appblock">AppBlock (cz.mobilesoft.appblock)</option>
-                                <option value="__custom__">Custom Service Package...</option>
-                            </select>
+                                onChange={setServicePackageName}
+                                placeholder="Search services or type a package name"
+                                allowCustom
+                            />
                         </div>
-
-                        {servicePackageName === '__custom__' && (
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                                    Service Package Name *
-                                </label>
-                                <input
-                                    type="text"
-                                    value={customServicePackage}
-                                    onChange={(e) => setCustomServicePackage(e.target.value)}
-                                    placeholder="e.g. cz.mobilesoft.appblock"
-                                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-rose-500 dark:bg-gray-700 dark:text-white text-sm"
-                                    required
-                                />
-                            </div>
-                        )}
 
                         {/* Target Type Selector */}
                         <div>
@@ -294,42 +296,17 @@ export default function AccessibilityFallbacksPage() {
 
                     {/* Target Inputs depending on type */}
                     {targetType === 'app' ? (
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                                    Application to Hide at OS Level *
-                                </label>
-                                <select
-                                    value={targetAppPackage}
-                                    onChange={(e) => setTargetAppPackage(e.target.value)}
-                                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-rose-500 dark:bg-gray-700 dark:text-white text-sm"
-                                    required
-                                >
-                                    <option value="">-- Select App to Hide --</option>
-                                    {installedApps.map((app) => (
-                                        <option key={app.package_name} value={app.package_name}>
-                                            {app.app_name} ({app.package_name})
-                                        </option>
-                                    ))}
-                                    <option value="__custom__">Custom Package Name...</option>
-                                </select>
-                            </div>
-
-                            {targetAppPackage === '__custom__' && (
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                                        Custom Package Name *
-                                    </label>
-                                    <input
-                                        type="text"
-                                        value={customAppPackage}
-                                        onChange={(e) => setCustomAppPackage(e.target.value)}
-                                        placeholder="e.g. com.android.chrome"
-                                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-rose-500 dark:bg-gray-700 dark:text-white text-sm"
-                                        required
-                                    />
-                                </div>
-                            )}
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                Application to Hide at OS Level *
+                            </label>
+                            <Combobox
+                                options={appOptions}
+                                value={targetAppPackage}
+                                onChange={setTargetAppPackage}
+                                placeholder="Search apps or type a package name, e.g. com.android.chrome"
+                                allowCustom
+                            />
                         </div>
                     ) : (
                         <div>
